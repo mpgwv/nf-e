@@ -1,4 +1,4 @@
-# 🇧🇷 Tributos que Afetam Empresas de Tecnologia e Serviços no Brasil
+# Tributos que Afetam Empresas de Tecnologia e Serviços no Brasil
 
 Este repositório tem como objetivo explicar, de forma clara e prática, os **principais impostos, tributos e encargos** que incidem sobre **empresas de tecnologia e serviços** no Brasil — incluindo desenvolvedoras de software, startups, consultorias e prestadoras de serviços digitais.
 
