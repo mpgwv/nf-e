@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora Tributária - Tecnologia</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #64748b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --background: #f8fafc;
+            --surface: #ffffff;
+        }
+        
+        .calculator-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: var(--surface);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        
+        .input-group {
+            margin-bottom: 1rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+        
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .result-card {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .tax-breakdown {
+            background: #f0f9ff;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-top: 1rem;
+        }
+        
+        .highlight {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator-container">
+        <h1>🧮 Calculadora Tributária para Empresas de Tecnologia</h1>
+        
+        <div class="input-grid">
+            <div class="input-group">
+                <label>Faturamento Mensal (R$)</label>
+                <input type="number" id="faturamento" value="50000" step="1000">
+            </div>
+            
+            <div class="input-group">
+                <label>Regime Tributário</label>
+                <select id="regime">
+                    <option value="simples">Simples Nacional</option>
+                    <option value="presumido">Lucro Presumido</option>
+                    <option value="real">Lucro Real</option>
+                </select>
+            </div>
+            
+            <div class="input-group">
+                <label>Atividade Principal</label>
+                <select id="atividade">
+                    <option value="desenvolvimento">Desenvolvimento de Software</option>
+                    <option value="consultoria">Consultoria em TI</option>
+                    <option value="suporte">Suporte Técnico</option>
+                    <option value="vendas">Venda de Software</option>
+                </select>
+            </div>
+            
+            <div class="input-group">
+                <label>Município (ISS)</label>
+                <select id="municipio">
+                    <option value="0.05">São Paulo - 5%</option>
+                    <option value="0.04">Rio de Janeiro - 4%</option>
+                    <option value="0.045">Belo Horizonte - 4,5%</option>
+                    <option value="0.02">Outros - 2% a 5%</option>
+                </select>
+            </div>
+        </div>
+        
+        <button onclick="calcularTributacao()" style="
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            width: 100%;
+            margin: 1rem 0;
+        ">Calcular Tributação</button>
+        
+        <div class="results-grid">
+            <div class="result-card">
+                <h3>📊 Resumo dos Tributos</h3>
+                <div id="resumoGeral"></div>
+            </div>
+            
+            <div class="result-card">
+                <h3>💰 Impacto no Faturamento</h3>
+                <div id="impactoFaturamento"></div>
+            </div>
+            
+            <div class="result-card">
+                <h3>📈 Detalhamento por Tributo</h3>
+                <div id="detalhamentoTributos"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class CalculadoraTributariaTecnologia {
+            constructor() {
+                this.tabelas = {
+                    simples: this.criarTabelaSimples(),
+                    presumido: this.criarTabelaPresumido(),
+                    real: this.criarTabelaReal()
+                };
+            }
+            
+            criarTabelaSimples() {
+                return [
+                    { faixa: 0, ate: 180000, aliquota: 0.055 },
+                    { faixa: 1, ate: 360000, aliquota: 0.095 },
+                    { faixa: 2, ate: 540000, aliquota: 0.105 },
+                    { faixa: 3, ate: 720000, aliquota: 0.115 },
+                    { faixa: 4, ate: 900000, aliquota: 0.125 },
+                    { faixa: 5, ate: 1080000, aliquota: 0.135 },
+                    { faixa: 6, ate: 4800000, aliquota: 0.155 }
+                ];
+            }
+            
+            criarTabelaPresumido() {
+                return {
+                    irpj: { presuncao: 0.08, aliquota: 0.15 },
+                    csll: { presuncao: 0.12, aliquota: 0.09 },
+                    pisCofins: { aliquota: 0.0925 },
+                    iss: { aliquota: 0.05 }
+                };
+            }
+            
+            criarTabelaReal() {
+                return {
+                    irpj: { aliquota: 0.15, adicional: 0.10 },
+                    csll: { aliquota: 0.09 },
+                    pisCofins: { aliquota: 0.0925 },
+                    iss: { aliquota: 0.05 }
+                };
+            }
+            
+            calcularSimples(faturamentoAnual) {
+                const tabela = this.tabelas.simples;
+                const faixa = tabela.find(f => faturamentoAnual <= f.ate) || tabela[tabela.length - 1];
+                return faturamentoAnual * faixa.aliquota;
+            }
+            
+            calcularPresumido(faturamentoMensal) {
+                const tabela = this.tabelas.presumido;
+                const faturamentoAnual = faturamentoMensal * 12;
+                
+                // IRPJ
+                const lucroPresumidoIRPJ = faturamentoAnual * tabela.irpj.presuncao;
+                const irpj = lucroPresumidoIRPJ * tabela.irpj.aliquota;
+                
+                // CSLL
+                const lucroPresumidoCSLL = faturamentoAnual * tabela.csll.presuncao;
+                const csll = lucroPresumidoCSLL * tabela.csll.aliquota;
+                
+                // PIS/COFINS
+                const pisCofins = faturamentoAnual * tabela.pisCofins.aliquota;
+                
+                // ISS
+                const iss = faturamentoAnual * tabela.iss.aliquota;
+                
+                return {
+                    irpj: irpj / 12,
+                    csll: csll / 12,
+                    pisCofins: pisCofins / 12,
+                    iss: iss / 12,
+                    total: (irpj + csll + pisCofins + iss) / 12
+                };
+            }
+            
+            calcularReal(faturamentoMensal, margemLucro = 0.20) {
+                const tabela = this.tabelas.real;
+                const faturamentoAnual = faturamentoMensal * 12;
+                const lucro = faturamentoAnual * margemLucro;
+                
+                // IRPJ
+                let irpj = lucro * tabela.irpj.aliquota;
+                if (lucro > 20000) {
+                    irpj += (lucro - 20000) * tabela.irpj.adicional;
+                }
+                
+                // CSLL
+                const csll = lucro * tabela.csll.aliquota;
+                
+                // PIS/COFINS
+                const pisCofins = faturamentoAnual * tabela.pisCofins.aliquota;
+                
+                // ISS
+                const iss = faturamentoAnual * tabela.iss.aliquota;
+                
+                return {
+                    irpj: irpj / 12,
+                    csll: csll / 12,
+                    pisCofins: pisCofins / 12,
+                    iss: iss / 12,
+                    total: (irpj + csll + pisCofins + iss) / 12
+                };
+            }
+        }
+        
+        function calcularTributacao() {
+            const calculadora = new CalculadoraTributariaTecnologia();
+            
+            // Obter inputs
+            const faturamentoMensal = parseFloat(document.getElementById('faturamento').value);
+            const regime = document.getElementById('regime').value;
+            const municipio = parseFloat(document.getElementById('municipio').value);
+            const atividade = document.getElementById('atividade').value;
+            
+            let resultado;
+            
+            switch(regime) {
+                case 'simples':
+                    const faturamentoAnual = faturamentoMensal * 12;
+                    const totalAnual = calculadora.calcularSimples(faturamentoAnual);
+                    resultado = {
+                        irpj: totalAnual * 0.30 / 12,
+                        csll: totalAnual * 0.15 / 12,
+                        pisCofins: totalAnual * 0.35 / 12,
+                        iss: totalAnual * 0.20 / 12,
+                        total: totalAnual / 12
+                    };
+                    break;
+                    
+                case 'presumido':
+                    resultado = calculadora.calcularPresumido(faturamentoMensal);
+                    break;
+                    
+                case 'real':
+                    resultado = calculadora.calcularReal(faturamentoMensal);
+                    break;
+            }
+            
+            // Ajustar ISS conforme município
+            resultado.iss = faturamentoMensal * municipio;
+            resultado.total = resultado.irpj + resultado.csll + resultado.pisCofins + resultado.iss;
+            
+            exibirResultados(faturamentoMensal, resultado, regime);
+        }
+        
+        function exibirResultados(faturamento, resultado, regime) {
+            const percentualTotal = (resultado.total / faturamento) * 100;
+            const faturamentoLiquido = faturamento - resultado.total;
+            
+            // Resumo Geral
+            document.getElementById('resumoGeral').innerHTML = `
+                <div class="tax-breakdown">
+                    <p><strong>Faturamento Bruto:</strong> R$ ${faturamento.toLocaleString('pt-BR')}</p>
+                    <p><strong>Total de Tributos:</strong> <span class="highlight">R$ ${resultado.total.toLocaleString('pt-BR')}</span></p>
+                    <p><strong>Faturamento Líquido:</strong> R$ ${faturamentoLiquido.toLocaleString('pt-BR')}</p>
+                    <p><strong>Percentual Tributário:</strong> ${percentualTotal.toFixed(2)}%</p>
+                    <p><strong>Regime:</strong> ${getRegimeName(regime)}</p>
+                </div>
+            `;
+            
+            // Impacto no Faturamento
+            document.getElementById('impactoFaturamento').innerHTML = `
+                <div class="tax-breakdown">
+                    <p>💰 <strong>Para cada R$ 100 faturados:</strong></p>
+                    <p>→ R$ ${resultado.total.toFixed(2)} vão para impostos</p>
+                    <p>→ R$ ${(100 - resultado.total).toFixed(2)} ficam para a empresa</p>
+                    <p>📊 <strong>Projeção Anual:</strong></p>
+                    <p>Faturamento: R$ ${(faturamento * 12).toLocaleString('pt-BR')}</p>
+                    <p>Impostos: R$ ${(resultado.total * 12).toLocaleString('pt-BR')}</p>
+                </div>
+            `;
+            
+            // Detalhamento
+            document.getElementById('detalhamentoTributos').innerHTML = `
+                <div class="tax-breakdown">
+                    ${Object.entries(resultado).map(([tributo, valor]) => `
+                        <p>${getTributoName(tributo)}: 
+                        <strong>R$ ${valor.toLocaleString('pt-BR')}</strong>
+                        (${((valor / faturamento) * 100).toFixed(2)}%)</p>
+                    `).join('')}
+                </div>
+            `;
+        }
+        
+        function getRegimeName(regime) {
+            const nomes = {
+                'simples': 'Simples Nacional',
+                'presumido': 'Lucro Presumido',
+                'real': 'Lucro Real'
+            };
+            return nomes[regime];
+        }
+        
+        function getTributoName(tributo) {
+            const nomes = {
+                'irpj': '📊 IRPJ',
+                'csll': '🏛️ CSLL',
+                'pisCofins': '💰 PIS/COFINS',
+                'iss': '🏙️ ISS',
+                'total': '💸 TOTAL'
+            };
+            return nomes[tributo] || tributo;
+        }
+        
+        // Calcular automaticamente ao carregar
+        window.onload = calcularTributacao;
+    </script>
+</body>
+</html>
